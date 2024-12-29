@@ -6,45 +6,58 @@
 #include "Engine/DataAsset.h"
 #include "R1AssetData.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FAssetEntry
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly)
-	FName AssetName;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Asset")
+    FName AssetName;
 
-	UPROPERTY(EditDefaultsOnly)
-	FSoftObjectPath AssetPath;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Asset")
+    FSoftObjectPath AssetPath;
 
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FName> AssetLabels;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Asset")
+    TArray<FName> AssetLabels;
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FAssetSet
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FAssetEntry> AssetEntries;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Asset")
+    TArray<FAssetEntry> AssetEntries;
 };
 
-
 /**
- * 
+ * Primary Data Asset for managing asset sets
  */
-UCLASS()
+UCLASS(BlueprintType)
 class R1_API UR1AssetData : public UPrimaryDataAsset
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:
+public: 
+    virtual void PreSave(FObjectPreSaveContext ObjectSaveContext) override;
+
+    UFUNCTION(BlueprintCallable, Category="Asset Management")
+    FSoftObjectPath GetAssetPathByName(const FName& AssetName) const;
+
+    UFUNCTION(BlueprintCallable, Category="Asset Management")
+    const FAssetSet& GetAssetSetByLabel(const FName& Label) const;
 
 private:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FName, FAssetSet> AssetGroupNameToSet;
-	
+    void InitializeMappings();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Asset", meta=(AllowPrivateAccess="true"))
+    TMap<FName, FAssetSet> AssetGroupNameToSet;
+
+    UPROPERTY(Transient, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
+    TMap<FName, FSoftObjectPath> AssetNameToPath;
+
+    UPROPERTY(Transient, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
+    TMap<FName, FAssetSet> AssetLabelToSet;
 };
